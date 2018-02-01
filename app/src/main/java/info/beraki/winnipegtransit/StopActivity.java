@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
@@ -48,7 +47,7 @@ public class StopActivity extends AppCompatActivity {
         }
         getNessesary(context);
 
-        scheduleRecyclerLayout = findViewById(R.id.scheduleRecyclerLayout);
+        scheduleRecyclerLayout = findViewById(R.id.scheduleRecyclerView);
 
 
 
@@ -76,7 +75,10 @@ public class StopActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(StopSchedule stopSchedule) {
-                scheduleDataAvailable(stopSchedule);
+                if(stopSchedule != null)
+                    scheduleDataAvailable(stopSchedule);
+                else
+                    Log.e("tag", "SOS data is null");
             }
 
             @Override
@@ -94,9 +96,10 @@ public class StopActivity extends AppCompatActivity {
 
     private void scheduleDataAvailable(StopSchedule stopSchedule) {
         this.stopSchedule = stopSchedule;
-        scheduleAdapter = new ScheduleAdapter(stopSchedule);
-        scheduleRecyclerLayout.setAdapter(scheduleAdapter);
+        // TODO: Create a new method for three lines below
+        scheduleAdapter= new ScheduleAdapter(stopSchedule);
         scheduleRecyclerLayout.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        scheduleRecyclerLayout.setAdapter(scheduleAdapter);
         scheduleAdapter.notifyDataSetChanged();
 
     }

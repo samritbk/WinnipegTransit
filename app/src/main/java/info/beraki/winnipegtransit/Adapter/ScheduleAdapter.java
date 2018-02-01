@@ -82,7 +82,9 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.MyView
 
     @Override
     public int getItemCount() {
-
+        if(stopSchedule == null){
+            Log.e("tag", "SOS in Adapter");
+        }
         return stopSchedule.getRouteSchedules().size();
     }
 
