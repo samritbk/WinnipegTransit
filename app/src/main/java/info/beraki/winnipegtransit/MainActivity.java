@@ -1,16 +1,19 @@
 package info.beraki.winnipegtransit;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Parcelable;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
@@ -28,10 +31,12 @@ import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
 import java.util.List;
 
+import info.beraki.winnipegtransit.Adapter.StopAdapter;
 import info.beraki.winnipegtransit.Model.Stops.Stop;
 import info.beraki.winnipegtransit.Model.Stops.StopsData;
 import info.beraki.winnipegtransit.Model.WTD;
 import info.beraki.winnipegtransit.View.DataGathering;
+import info.beraki.winnipegtransit.View.MainActivityInterface;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.Single;
@@ -42,7 +47,7 @@ import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener,MainActivityInterface {
 
     private static final int MY_PERMISSIONS_LOCATION = 10;
     TextView text;
@@ -52,24 +57,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LocationRequest locationRequest;
     private double LONGITUDE=0;
     private double LATITUDE=0;
-    StopsData stopsData;
+    StopsData stopsData = new StopsData();
+    StopAdapter stopAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        text = findViewById(R.id.text);
-        button = findViewById(R.id.button);
+        //text = findViewById(R.id.text);
+        //button = findViewById(R.id.button);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        getLocationData();
+
 
         if(LATITUDE != 0 && LONGITUDE != 0){
             Toast.makeText(this, LATITUDE+"-"+LONGITUDE, Toast.LENGTH_LONG).show();
         }
 
-        button.setOnClickListener(this);
+//        button.setOnClickListener(this);
+
+        recyclerView = findViewById(R.id.recyclerLayout);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
 
 
     }
@@ -104,6 +113,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 LONGITUDE=location.getLongitude();
                                 LATITUDE=location.getLatitude();
                                 locationDataAvailable();
+                            }else{
+                                //TODO: Handle LOC data not available
+                                Toast.makeText(MainActivity.this, "There is no Location data on file", Toast.LENGTH_SHORT).show();
                             }
                         }
                     }).addOnFailureListener(new OnFailureListener() {
@@ -144,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         StopsSingle.subscribe(new SingleObserver<StopsData>() {
             @Override
             public void onSubscribe(Disposable d) {
-                Log.wtf("tag", "Hi there");
+
             }
 
             @Override
@@ -154,7 +166,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onError(Throwable e) {
-                Log.e("tag", e.getMessage());
+
             }
         });
 
@@ -162,15 +174,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void stopDataAvailable(StopsData value) {
         stopsData = value;
+        // TODO: Create a new method for three lines below
+        stopAdapter= new StopAdapter(stopsData);
+        recyclerView.setAdapter(stopAdapter);
+        stopAdapter.notifyDataSetChanged();
+
         Toast.makeText(this, stopsData.getStops().get(0).getName(), Toast.LENGTH_SHORT).show();
 
-        List<Stop> stops=stopsData.getStops();
-
-        int count=stops.size();
-
-        for(int i=0; i < count; i++){
-            text.append(stops.get(i).getName()+"\n");
-        }
+//        List<Stop> stops=stopsData.getStops();
+//
+//        int count=stops.size();
+//
+//        for(int i=0; i < count; i++){
+//            text.append(stops.get(i).getName()+"\n");
+//        }
 
     }
 
@@ -190,10 +207,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()){
-            case R.id.button:
-                getLocationData();
-                break;
-        }
+//        switch (view.getId()){
+//            case R.id.button:
+//                getLocationData();
+//                break;
+//        }
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        getLocationData();
+    }
+
 }

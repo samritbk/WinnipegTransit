@@ -3,9 +3,11 @@ package info.beraki.winnipegtransit.Model.Stops;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
+
 
 @SuppressWarnings("unused")
-public class Distances {
+public class Distances implements Serializable {
 
     @SerializedName("direct")
     private String mDirect;

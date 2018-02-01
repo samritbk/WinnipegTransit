@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:padding="10dp"
+    android:paddingLeft="16dp"
+    android:id="@+id/RLstopLayoutParent">
+
+    <TextView
+        android:id="@+id/stop_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="North Bound Sherbrook at Ellice"
+        android:textColor="#333"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/stop_number"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/stop_name"
+        tools:text="#102424"
+        android:textSize="14sp"/>
+
+
+</RelativeLayout>

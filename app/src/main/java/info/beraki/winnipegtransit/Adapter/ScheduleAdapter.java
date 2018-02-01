@@ -14,6 +14,8 @@ import android.widget.TextView;
 import java.io.Serializable;
 
 import info.beraki.winnipegtransit.MainActivity;
+import info.beraki.winnipegtransit.Model.Schedule.Schedule;
+import info.beraki.winnipegtransit.Model.Schedule.StopSchedule;
 import info.beraki.winnipegtransit.Model.Stops.Stop;
 import info.beraki.winnipegtransit.Model.Stops.StopsData;
 import info.beraki.winnipegtransit.R;
@@ -23,33 +25,25 @@ import info.beraki.winnipegtransit.StopActivity;
  * Created by Beraki on 1/30/2018.
  */
 
-public class StopAdapter extends RecyclerView.Adapter<StopAdapter.MyViewHolder>{
+public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.MyViewHolder>{
 
-    StopsData stopsData;
+    StopSchedule stopSchedule;
     View v;
     Context context;
 
-    public StopAdapter(StopsData value){
-        this.stopsData=value;
+    public ScheduleAdapter(StopSchedule value){
+        this.stopSchedule=value;
     }
-
-
 
 
     public class MyViewHolder extends RecyclerView.ViewHolder{
 
-        TextView stopName;
-        TextView stopNumber;
-        RelativeLayout stopLayoutParent;
+        TextView schedule;
 
         public MyViewHolder(View itemView) {
             super(itemView);
             context = itemView.getContext();
-            stopName = itemView.findViewById(R.id.stop_name);
-            stopNumber = itemView.findViewById(R.id.stop_number);
-            stopLayoutParent = itemView.findViewById(R.id.RLstopLayoutParent);
-
-
+            schedule = itemView.findViewById(R.id.schedule);
 
         }
 
@@ -66,37 +60,30 @@ public class StopAdapter extends RecyclerView.Adapter<StopAdapter.MyViewHolder>{
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        v= LayoutInflater.from(parent.getContext()).inflate(R.layout.stops_recycler_layout, null);
+        v= LayoutInflater.from(parent.getContext()).inflate(R.layout.schedule_recycler_layout, null);
 
         return new MyViewHolder(v);
     }
 
 
     @Override
-    public void onBindViewHolder(MyViewHolder holder, int position) {
-        final Stop aStop= stopsData.getStops().get(position);
+    public void onBindViewHolder(ScheduleAdapter.MyViewHolder holder, int position) {
+//        final StopSchedule aStopSchedule= stopSchedule;
+//
+//        v.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                startStopActivity(context, aStop);
+//            }
+//        });
 
-
-        String name=aStop.getName();
-        long number=aStop.getNumber();
-
-        holder.stopName.setText(name);
-        holder.stopNumber.setText("#"+number);
-
-
-        v.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startStopActivity(context, aStop);
-            }
-        });
 
     }
 
     @Override
     public int getItemCount() {
-        Log.d("tag", "Hi "+stopsData.getStops().size());
-        return stopsData.getStops().size();
+
+        return stopSchedule.getRouteSchedules().size();
     }
 
     public void startStopActivity(Context context, Stop stop) {

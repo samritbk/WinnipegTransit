@@ -4,9 +4,11 @@ package info.beraki.winnipegtransit.Model.Stops;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
+
 
 @SuppressWarnings("unused")
-public class CrossStreet {
+public class CrossStreet implements Serializable {
 
     @SerializedName("key")
     private Long mKey;

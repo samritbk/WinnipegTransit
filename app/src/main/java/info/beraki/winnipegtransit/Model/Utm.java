@@ -1,11 +1,13 @@
 
 package info.beraki.winnipegtransit.Model;
 
+
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
 
 @SuppressWarnings("unused")
-public class Utm {
+public class Utm  implements Serializable {
 
     @SerializedName("x")
     private Long mX;

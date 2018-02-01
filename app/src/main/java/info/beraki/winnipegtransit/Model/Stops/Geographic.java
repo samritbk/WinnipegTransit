@@ -4,9 +4,11 @@ package info.beraki.winnipegtransit.Model.Stops;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
+
 
 @SuppressWarnings("unused")
-public class Geographic {
+public class Geographic  implements Serializable {
 
     @SerializedName("latitude")
     private String mLatitude;

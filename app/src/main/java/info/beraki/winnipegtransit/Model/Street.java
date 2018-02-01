@@ -1,11 +1,14 @@
 
 package info.beraki.winnipegtransit.Model;
 
+
 import com.google.gson.annotations.SerializedName;
+
+import java.io.Serializable;
 
 
 @SuppressWarnings("unused")
-public class Street {
+public class Street implements Serializable{
 
     @SerializedName("key")
     private Long mKey;
