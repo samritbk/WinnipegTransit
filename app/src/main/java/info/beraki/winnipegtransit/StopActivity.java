@@ -1,5 +1,6 @@
 package info.beraki.winnipegtransit;
 
+import android.app.ApplicationErrorReport;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -8,17 +9,20 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
+import com.google.gson.Gson;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
 import info.beraki.winnipegtransit.Adapter.ScheduleAdapter;
 import info.beraki.winnipegtransit.Model.Schedule.StopSchedule;
 import info.beraki.winnipegtransit.Model.Stops.Stop;
 import info.beraki.winnipegtransit.View.DataGathering;
+import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -26,7 +30,7 @@ public class StopActivity extends AppCompatActivity {
 
     Stop stopData;
     Context context;
-    StopSchedule stopSchedule;
+    StopSchedule stopSchedule=null;
     ScheduleAdapter scheduleAdapter;
     RecyclerView scheduleRecyclerLayout;
 
@@ -43,15 +47,12 @@ public class StopActivity extends AppCompatActivity {
 
             if(stop != null){
                 stopData = stop;
+                Log.v("tag", stopData.getNumber()+"");
             }
         }
         getNessesary(context);
 
         scheduleRecyclerLayout = findViewById(R.id.scheduleRecyclerView);
-
-
-
-
 
         Retrofit retrofit= new Retrofit.Builder()
                 .baseUrl("https://api.winnipegtransit.com")
@@ -60,12 +61,12 @@ public class StopActivity extends AppCompatActivity {
                 .build();
 
         DataGathering dataGathering=retrofit.create(DataGathering.class);
-        Single<StopSchedule> scheduleSingle= dataGathering
-                .getScheduledBusesByStop(
-                        stopData.getNumber(),
-                        DataGathering.API_KEY)
+        Single<StopSchedule> scheduleSingle= dataGathering.getScheduledBusesByStop(
+                stopData.getNumber(),
+                DataGathering.API_KEY)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io());
+
 
         scheduleSingle.subscribe(new SingleObserver<StopSchedule>() {
             @Override
@@ -75,15 +76,16 @@ public class StopActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(StopSchedule stopSchedule) {
-                if(stopSchedule != null)
+                if(stopSchedule != null) {
+                    Log.e("tag", new Gson().toJson(stopSchedule));
                     scheduleDataAvailable(stopSchedule);
-                else
-                    Log.e("tag", "SOS data is null");
+                }else{
+                    Log.e("tag", "SOS data is null");}
             }
 
             @Override
             public void onError(Throwable e) {
-
+                Log.e("tag", e.getMessage());
             }
         });
     }

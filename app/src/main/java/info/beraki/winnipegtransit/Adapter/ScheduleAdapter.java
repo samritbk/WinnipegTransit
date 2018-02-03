@@ -2,22 +2,16 @@ package info.beraki.winnipegtransit.Adapter;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Parcelable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import java.io.Serializable;
-
-import info.beraki.winnipegtransit.MainActivity;
-import info.beraki.winnipegtransit.Model.Schedule.Schedule;
+import info.beraki.winnipegtransit.Model.Schedule.RouteSchedule;
 import info.beraki.winnipegtransit.Model.Schedule.StopSchedule;
 import info.beraki.winnipegtransit.Model.Stops.Stop;
-import info.beraki.winnipegtransit.Model.Stops.StopsData;
 import info.beraki.winnipegtransit.R;
 import info.beraki.winnipegtransit.StopActivity;
 
@@ -33,6 +27,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.MyView
 
     public ScheduleAdapter(StopSchedule value){
         this.stopSchedule=value;
+        Log.e("adapter", value.getRouteSchedules().get(0).getRoute().getName());
     }
 
 
@@ -68,24 +63,24 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.MyView
 
     @Override
     public void onBindViewHolder(ScheduleAdapter.MyViewHolder holder, int position) {
-//        final StopSchedule aStopSchedule= stopSchedule;
-//
-//        v.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                startStopActivity(context, aStop);
-//            }
-//        });
+        RouteSchedule routeSchedule=stopSchedule.getRouteSchedules().get(0);
+
+
+        String estimated=routeSchedule.getScheduledStops().get(position).getTimes().getArrival().getEstimated();
+        String scheduled=routeSchedule.getScheduledStops().get(position).getTimes().getArrival().getScheduled();
+
+        Log.i("adapter", scheduled+"--");
+        holder.schedule.setText("Scheduled "+scheduled +"\n Estimated "+ estimated);
 
 
     }
 
     @Override
     public int getItemCount() {
-        if(stopSchedule == null){
-            Log.e("tag", "SOS in Adapter");
+        if(stopSchedule != null){
+            Log.e("tag", stopSchedule.getRouteSchedules().size()+"SOS in Adapter");
         }
-        return stopSchedule.getRouteSchedules().size();
+        return stopSchedule.getRouteSchedules().get(0).getScheduledStops().size();
     }
 
     public void startStopActivity(Context context, Stop stop) {

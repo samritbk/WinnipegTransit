@@ -1,10 +1,8 @@
 package info.beraki.winnipegtransit.View;
 
-import info.beraki.winnipegtransit.Model.Schedule.Schedule;
 import info.beraki.winnipegtransit.Model.Schedule.StopSchedule;
 import info.beraki.winnipegtransit.Model.Stops.StopsData;
 import info.beraki.winnipegtransit.Model.WTD;
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
