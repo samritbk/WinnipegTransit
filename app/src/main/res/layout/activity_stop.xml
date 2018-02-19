@@ -5,10 +5,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="info.beraki.winnipegtransit.StopActivity">
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/scheduleRecyclerLayout"
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:minHeight="?attr/actionBarSize"
+        android:gravity="top"
+        android:background="?attr/colorPrimaryDark"
+        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+    <TextView
+        android:id="@+id/toolbarTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Title"
+        android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title.Inverse"
+        android:textColor="#FFF"
+        android:maxLines="2"/>
+    </android.support.v7.widget.Toolbar>
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipeToRefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar">
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/scheduleRecyclerLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </android.support.v4.widget.SwipeRefreshLayout>
 
 </RelativeLayout>

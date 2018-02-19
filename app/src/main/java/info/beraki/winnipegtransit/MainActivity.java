@@ -13,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -25,6 +26,14 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -47,7 +56,7 @@ import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener,MainActivityInterface {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener,MainActivityInterface, OnMapReadyCallback {
 
     private static final int MY_PERMISSIONS_LOCATION = 10;
     TextView text;
@@ -59,6 +68,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private double LATITUDE=0;
     StopsData stopsData = new StopsData();
     StopAdapter stopAdapter;
+    GoogleMap gMaps;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +78,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //text = findViewById(R.id.text);
         //button = findViewById(R.id.button);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
 
@@ -78,7 +93,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        button.setOnClickListener(this);
 
         recyclerView = findViewById(R.id.recyclerLayout);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
 
 
     }
@@ -130,6 +144,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void locationDataAvailable() {
         Toast.makeText(this, LATITUDE+"-"+LONGITUDE, Toast.LENGTH_LONG).show();
 
+        LatLng sydney = new LatLng(LATITUDE, LONGITUDE);
+        gMaps.addMarker(new MarkerOptions().position(sydney).title("Your Location"));
+        gMaps.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        CameraUpdate zoom=CameraUpdateFactory.zoomTo(15);
+        gMaps.animateCamera(zoom);
+        gMaps.addCircle(new CircleOptions().fillColor(R.color.colorPrimary).center(sydney).strokeColor(R.color.colorAccent));
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.winnipegtransit.com")
                 .addConverterFactory(GsonConverterFactory.create())
@@ -145,13 +166,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 DataGathering.API_KEY)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io());
-
-//        Single<WTD> getStops= dataGathering.getWinnipegTransitData(
-//                LATITUDE,
-//                LONGITUDE,
-//                DataGathering.API_KEY)
-//                .observeOn(Schedulers.io())
-//                .subscribeOn(Schedulers.io());
 
         StopsSingle.subscribe(new SingleObserver<StopsData>() {
             @Override
@@ -177,7 +191,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // TODO: Create a new method for three lines below
         stopAdapter= new StopAdapter(stopsData);
         recyclerView.setAdapter(stopAdapter);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
+        recyclerView.setLayoutManager(linearLayoutManager);
+        DividerItemDecoration dividerItemDecoration= new DividerItemDecoration(getApplicationContext(), linearLayoutManager.getOrientation());
+        recyclerView.addItemDecoration(dividerItemDecoration);
         stopAdapter.notifyDataSetChanged();
+
+
 
         Toast.makeText(this, stopsData.getStops().get(0).getName(), Toast.LENGTH_SHORT).show();
 
@@ -221,4 +241,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         getLocationData();
     }
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        gMaps = googleMap;
+        // Add a marker in Sydney, Australia, and move the camera.
+        LatLng sydney = new LatLng(-34, 151);
+        googleMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+    }
 }

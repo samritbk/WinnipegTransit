@@ -1,10 +1,11 @@
 package info.beraki.winnipegtransit.View;
 
-import info.beraki.winnipegtransit.Model.Schedule.Schedule;
+import com.google.gson.JsonObject;
+
 import info.beraki.winnipegtransit.Model.Schedule.StopSchedule;
 import info.beraki.winnipegtransit.Model.Stops.StopsData;
 import info.beraki.winnipegtransit.Model.WTD;
-import io.reactivex.Observable;
+
 import io.reactivex.Single;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
@@ -39,5 +40,11 @@ public interface DataGathering {
         Single<StopSchedule> getScheduledBusesByStop(
                 @Path("bus_no") long bus_number,
                 @Query("api-key") String API_KEY);
+
+        @GET("/v2/stops/{bus_no}/schedule.json")
+        Single<String> getScheduledBusesByStopInString(
+                @Path("bus_no") long bus_number,
+                @Query("api-key") String API_KEY);
+
 
 }

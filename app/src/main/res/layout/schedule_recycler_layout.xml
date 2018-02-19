@@ -1,13 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools">
-    <TextView
-        android:id="@+id/schedule"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:layout_weight="6">
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2"
         android:paddingLeft="16dp"
-        tools:text="Routes"/>
-</RelativeLayout>
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:background="#FFFFFF">
+
+        <TextView
+            android:id="@+id/bus_number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="45sp"
+            android:paddingStart="0dp"
+            android:paddingBottom="0dp"
+            android:text="12"
+            android:textColor="#666"
+            android:textStyle="bold"
+            android:fontFamily="@font/archive"/>
+
+        <TextView
+            android:id="@+id/variant"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/bus_number"
+            android:textSize="10sp"
+            android:padding="6dp"
+            android:text="Regular"
+            android:textColor="#666"
+            android:textStyle="bold"
+            android:background="@drawable/express"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="15dp"/>
+        <TextView
+            android:id="@+id/bus_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="10dp"
+            android:textSize="20sp"
+            android:textColor="#444"
+            android:layout_below="@id/bus_number"
+            android:fontFamily="@font/robotolight"
+            android:text="Routes"
+            android:textStyle="bold"
+            android:layout_marginTop="0dp"/>
+    </RelativeLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="3"
+        android:background="#F3F3F3">
+        <TextView
+            android:id="@+id/schedule"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:layout_centerInParent="true"
+            tools:text="54"
+            android:textSize="50sp"
+            android:fontFamily="@font/archive"/>
+    </RelativeLayout>
+</LinearLayout>
