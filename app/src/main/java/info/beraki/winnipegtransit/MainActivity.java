@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 LONGITUDE,
                 250,
                 DataGathering.API_KEY)
-                .observeOn(AndroidSchedulers.mainThread())
+                .observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io());
 
         StopsSingle.subscribe(new SingleObserver<StopsData>() {
