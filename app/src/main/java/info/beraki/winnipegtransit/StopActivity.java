@@ -3,6 +3,7 @@ package info.beraki.winnipegtransit;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,15 +11,29 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.akexorcist.googledirection.DirectionCallback;
+import com.akexorcist.googledirection.GoogleDirection;
+import com.akexorcist.googledirection.model.Direction;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -39,7 +54,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
-public class StopActivity extends AppCompatActivity {
+public class StopActivity extends AppCompatActivity implements OnMapReadyCallback{
 
     Toolbar toolbar;
     TextView toolbarTitle;
@@ -49,6 +64,10 @@ public class StopActivity extends AppCompatActivity {
     ScheduleAdapter scheduleAdapter;
     RecyclerView scheduleRecyclerLayout;
     StopSchedule stopSchedule;
+    Fragment mapFragment;
+    GoogleMap gMap;
+    LatLng sydney;
+    List<ScheduledStop> scheduledStopList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,11 +77,17 @@ public class StopActivity extends AppCompatActivity {
 
         toolbar = findViewById(R.id.toolbar);
         toolbarTitle = findViewById(R.id.toolbarTitle);
-        setSupportActionBar(toolbar);
+//        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+//                .findFragmentById(R.id.map);
+//        mapFragment.getMapAsync(this);
+//        setSupportActionBar(toolbar);
 
-        if(getSupportActionBar() != null)
+
+
+        if(getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
+            getSupportActionBar().setDisplayShowTitleEnabled(true);
+        }
         Intent intent= this.getIntent();
         if(intent != null) {
             // TODO: They say its better to use Parcelable
@@ -71,7 +96,7 @@ public class StopActivity extends AppCompatActivity {
             if(stop != null){
                 stopData = stop;
                 //Log.v("tag",stopData.getName());
-                if(getSupportActionBar() != null)
+                //if(getSupportActionBar() != null)
                     toolbarTitle.setText(stopData.getName());
             }
         }
@@ -108,14 +133,23 @@ public class StopActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(StopSchedule stopSchedule) {
+
                 Toast.makeText(
                         context,
                         stopSchedule.getStopSchedule().getRouteSchedules().size()+"",
                         Toast.LENGTH_LONG)
                         .show();
-                List<ScheduledStop> scheduledStop;
-                scheduledStop=getSchedulesByTime(stopSchedule);
-                scheduleDataAvailable(stopSchedule, scheduledStop);
+
+                scheduledStopList=getSchedulesByTime(stopSchedule);
+                scheduleDataAvailable(stopSchedule, scheduledStopList);
+                double LATITUDE= Double.parseDouble(stopSchedule.getStopSchedule().getStop().getCentre().getGeographic().getLatitude());
+                double LONGITUDE = Double.parseDouble(stopSchedule.getStopSchedule().getStop().getCentre().getGeographic().getLongitude());
+                sydney = new LatLng(LATITUDE, LONGITUDE);
+                Toast.makeText(context, LATITUDE+"-"+LONGITUDE, Toast.LENGTH_LONG).show();
+                SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                        .findFragmentById(R.id.map);
+                mapFragment.getMapAsync(StopActivity.this);
+                setSupportActionBar(toolbar);
             }
 
             @Override
@@ -166,7 +200,6 @@ public class StopActivity extends AppCompatActivity {
         scheduleAdapter.notifyDataSetChanged();
 
     }
-
     class ScheduledStopComparator implements Comparator<ScheduledStop>{
 
         @Override
@@ -219,6 +252,32 @@ public class StopActivity extends AppCompatActivity {
         return time;
     }
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        gMap = googleMap;
 
+        googleMap.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(this, R.raw.black_map));
+        gMap.addMarker(new MarkerOptions().position(sydney).title("Your Location").anchor(0.5f, 0.5f));
+        gMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        CameraUpdate zoom=CameraUpdateFactory.zoomTo(16);
+        gMap.animateCamera(zoom);
+
+//        LatLng userLoc=new LatLng(MainActivity.LATITUDE, MainActivity.LONGITUDE);
+//        GoogleDirection.withServerKey(String.valueOf(R.string.google_play_API_key))
+//                .from(userLoc)
+//                .to(sydney)
+//                .execute(new DirectionCallback() {
+//                    @Override
+//                    public void onDirectionSuccess(Direction direction, String rawBody) {
+//                        Toast.makeText(context, "OK", Toast.LENGTH_LONG).show();
+//                    }
+//
+//                    @Override
+//                    public void onDirectionFailure(Throwable t) {
+//
+//                    }
+//                });
+    }
 
 }

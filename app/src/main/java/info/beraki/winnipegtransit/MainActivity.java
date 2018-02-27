@@ -1,15 +1,13 @@
 package info.beraki.winnipegtransit;
 
 import android.Manifest;
-import android.content.Context;
-import android.content.Intent;
+import android.annotation.SuppressLint;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.Parcelable;
-import android.provider.Settings;
+import android.location.LocationProvider;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,32 +20,36 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
-import java.util.List;
-
 import info.beraki.winnipegtransit.Adapter.StopAdapter;
-import info.beraki.winnipegtransit.Model.Stops.Stop;
 import info.beraki.winnipegtransit.Model.Stops.StopsData;
-import info.beraki.winnipegtransit.Model.WTD;
 import info.beraki.winnipegtransit.View.DataGathering;
 import info.beraki.winnipegtransit.View.MainActivityInterface;
-import io.reactivex.Observable;
-import io.reactivex.Observer;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -56,20 +58,19 @@ import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener,MainActivityInterface, OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity implements
+        MainActivityInterface,
+        View.OnClickListener,
+        OnMapReadyCallback {
 
     private static final int MY_PERMISSIONS_LOCATION = 10;
-    TextView text;
-    Button button;
     RecyclerView recyclerView;
-    private FusedLocationProviderClient mFusedLocationClient;
-    private LocationRequest locationRequest;
-    private double LONGITUDE=0;
-    private double LATITUDE=0;
+    private FusedLocationProviderClient mFusedLocationProviderClient;
+    public static double LONGITUDE = 0;
+    public static double LATITUDE = 0;
     StopsData stopsData = new StopsData();
     StopAdapter stopAdapter;
     GoogleMap gMaps;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,19 +79,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //text = findViewById(R.id.text);
         //button = findViewById(R.id.button);
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-
-
-        if(LATITUDE != 0 && LONGITUDE != 0){
-            Toast.makeText(this, LATITUDE+"-"+LONGITUDE, Toast.LENGTH_LONG).show();
+        if (LATITUDE != 0 && LONGITUDE != 0) {
+            Toast.makeText(this, LATITUDE + "-" + LONGITUDE, Toast.LENGTH_LONG).show();
         }
-
-//        button.setOnClickListener(this);
 
         recyclerView = findViewById(R.id.recyclerLayout);
 
@@ -117,39 +115,115 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         } else {
             //Toast.makeText(this, "You can", Toast.LENGTH_SHORT).show();
-            mFusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            // Got last known location. In some rare situations this can be null.
-                            if (location != null) {
-                                // Logic to handle location object
-                                LONGITUDE=location.getLongitude();
-                                LATITUDE=location.getLatitude();
-                                locationDataAvailable();
-                            }else{
-                                //TODO: Handle LOC data not available
-                                Toast.makeText(MainActivity.this, "There is no Location data on file", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
+            mFusedLocationProviderClient.getLastLocation()
+                    .addOnSuccessListener(this, onSuccessListener)
+                    .addOnFailureListener(onFailureListener);
         }
     }
 
-    private void locationDataAvailable() {
-        Toast.makeText(this, LATITUDE+"-"+LONGITUDE, Toast.LENGTH_LONG).show();
+    OnSuccessListener<Location> onSuccessListener = new OnSuccessListener<Location>() {
+        @Override
+        public void onSuccess(Location location) {
+            // Got last known location. In some rare situations this can be null.
+            if (location != null) {
+                // Logic to handle location object
+                LONGITUDE = location.getLongitude();
+                LATITUDE = location.getLatitude();
+                locationDataAvailable();
+            } else {
+                //TODO: Working on !! Handle LOC data not available
+                Toast.makeText(MainActivity.this, "There is no Location data on file", Toast.LENGTH_SHORT).show();
+                getCurrentLocation(mFusedLocationProviderClient);
+            }
+        }
+    };
 
-        LatLng sydney = new LatLng(LATITUDE, LONGITUDE);
-        gMaps.addMarker(new MarkerOptions().position(sydney).title("Your Location"));
-        gMaps.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-        CameraUpdate zoom=CameraUpdateFactory.zoomTo(15);
-        gMaps.animateCamera(zoom);
-        gMaps.addCircle(new CircleOptions().fillColor(R.color.colorPrimary).center(sydney).strokeColor(R.color.colorAccent));
+    OnFailureListener onFailureListener = new OnFailureListener() {
+        @Override
+        public void onFailure(@NonNull Exception e) {
+            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    };
+
+
+    @SuppressLint("MissingPermission")
+    private void getCurrentLocation(final FusedLocationProviderClient mFusedLocationClient) {
+
+        // Initializing a location request
+        final LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
+                .setFastestInterval(1000)
+                .setInterval(1500);
+
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+
+        SettingsClient client = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build())
+                .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+                    @Override
+                    public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                        // All location settings are satisfied. The client can initialize
+                        // location requests here.
+                        if (!locationSettingsResponse.getLocationSettingsStates().isGpsUsable()) {
+                            Log.e("winnipeg", "should come 2");
+                            requestLocationUpdate(mFusedLocationClient, locationRequest);
+                        }
+                    }
+                }).addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e("winnipeg", "should come 1");
+                        if (e instanceof ResolvableApiException) {
+                            // Location settings are not satisfied, but this can be fixed
+                            // by showing the user a dialog.
+                            try {
+                                // Show the dialog by calling startResolutionForResult(),
+                                // and check the result in onActivityResult().
+                                ResolvableApiException resolvable = (ResolvableApiException) e;
+                                resolvable.startResolutionForResult(MainActivity.this,
+                                        21);
+                            } catch (IntentSender.SendIntentException sendEx) {
+                                // Ignore the error.
+                            }
+                        }
+                    }
+                });
+    }
+
+
+    LocationCallback locationCallback = new LocationCallback() {
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            Location location = locationResult.getLastLocation();
+
+            LONGITUDE = location.getLongitude();
+            LATITUDE = location.getLatitude();
+
+            locationDataAvailable();
+            stopLocationUpdates();
+        }
+
+    };
+
+    private void stopLocationUpdates() {
+        mFusedLocationProviderClient.removeLocationUpdates(locationCallback);
+    }
+
+    @SuppressLint("MissingPermission")
+    private void requestLocationUpdate(FusedLocationProviderClient mFusedLocationClient, LocationRequest locationRequest) {
+        mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null);
+
+
+    }
+
+    @SuppressLint("MissingPermission")
+    private void locationDataAvailable() {
+
+
+        setUpMap();
+
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.winnipegtransit.com")
@@ -164,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 LONGITUDE,
                 250,
                 DataGathering.API_KEY)
-                .observeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io());
 
         StopsSingle.subscribe(new SingleObserver<StopsData>() {
@@ -189,25 +263,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void stopDataAvailable(StopsData value) {
         stopsData = value;
         // TODO: Create a new method for three lines below
-        stopAdapter= new StopAdapter(stopsData);
-        recyclerView.setAdapter(stopAdapter);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
-        recyclerView.setLayoutManager(linearLayoutManager);
-        DividerItemDecoration dividerItemDecoration= new DividerItemDecoration(getApplicationContext(), linearLayoutManager.getOrientation());
-        recyclerView.addItemDecoration(dividerItemDecoration);
-        stopAdapter.notifyDataSetChanged();
 
-
+                stopAdapter= new StopAdapter(stopsData);
+                recyclerView.setAdapter(stopAdapter);
+                LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
+                recyclerView.setLayoutManager(linearLayoutManager);
+                DividerItemDecoration dividerItemDecoration= new DividerItemDecoration(getApplicationContext(), linearLayoutManager.getOrientation());
+                recyclerView.addItemDecoration(dividerItemDecoration);
+                stopAdapter.notifyDataSetChanged();
 
         Toast.makeText(this, stopsData.getStops().get(0).getName(), Toast.LENGTH_SHORT).show();
-
-//        List<Stop> stops=stopsData.getStops();
-//
-//        int count=stops.size();
-//
-//        for(int i=0; i < count; i++){
-//            text.append(stops.get(i).getName()+"\n");
-//        }
 
     }
 
@@ -227,11 +292,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-//        switch (view.getId()){
-//            case R.id.button:
-//                getLocationData();
-//                break;
-//        }
+
     }
 
     @Override
@@ -242,12 +303,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
+
+    @SuppressLint("MissingPermission")
+    private void setUpMap() {
+        LatLng latLng = new LatLng(LATITUDE, LONGITUDE);
+        gMaps.setMyLocationEnabled(true);
+        gMaps.getUiSettings().setMyLocationButtonEnabled(false);
+        gMaps.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        CameraUpdate zoom=CameraUpdateFactory.zoomTo(15);
+        gMaps.animateCamera(zoom);
+    }
+
+    @Override
     public void onMapReady(GoogleMap googleMap) {
         gMaps = googleMap;
+        googleMap.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(
+                        this, R.raw.black_map));
         // Add a marker in Sydney, Australia, and move the camera.
-        LatLng sydney = new LatLng(-34, 151);
-        googleMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        LatLng sydney = new LatLng(49.895077, -97.138451);
+        googleMap.addMarker(new MarkerOptions().position(sydney).title("Winnipeg City"));
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        googleMap.moveCamera(CameraUpdateFactory.zoomTo(15));
 
     }
 }

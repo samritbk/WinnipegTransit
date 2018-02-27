@@ -6,7 +6,13 @@
     android:layout_height="match_parent"
     tools:context="info.beraki.winnipegtransit.MainActivity">
 
-
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:id="@+id/map"
+        tools:context=".MapsActivity"
+        android:name="com.google.android.gms.maps.SupportMapFragment"/>
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
@@ -14,22 +20,14 @@
         android:layout_height="?actionBarSize"
         app:titleTextColor="#FFF"
         app:title="@string/app_name"
-        android:background="@color/colorPrimary"/>
-
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
-        android:layout_height="180dp"
-        android:id="@+id/map"
-        android:layout_below="@id/toolbar"
-        tools:context=".MapsActivity"
-        android:name="com.google.android.gms.maps.SupportMapFragment"/>
+        android:background="@android:color/transparent"/>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerLayout"
         android:layout_below="@id/map"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="#FFF">
 
     </android.support.v7.widget.RecyclerView>
 

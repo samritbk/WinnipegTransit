@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:padding="10dp"
     android:paddingLeft="16dp"
-    android:id="@+id/RLstopLayoutParent">
+    android:id="@+id/RLstopLayoutParent"
+    android:background="#FFF">
 
     <TextView
         android:id="@+id/stop_name"

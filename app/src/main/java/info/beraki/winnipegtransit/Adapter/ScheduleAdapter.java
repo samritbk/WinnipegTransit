@@ -9,9 +9,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
+import info.beraki.winnipegtransit.Model.Schedule.RouteSchedule;
 import info.beraki.winnipegtransit.Model.Schedule.ScheduledStop;
 import info.beraki.winnipegtransit.Model.Schedule.StopSchedule;
 import info.beraki.winnipegtransit.Model.Stops.Stop;
@@ -62,14 +64,6 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.MyView
 
     }
 
-//    //TODO: Is this really the best way
-//    @Override
-//    public void onClick(View view) {
-//
-//            Log.w("tag", "My Ni99a");
-//
-//    }
-
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
@@ -88,10 +82,11 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.MyView
         String scheduledArrivalEst=scheduledStop.getTimes().getArrival().getEstimated();
         String busVarientKey=scheduledStop.getVariant().getKey();
         String busNo = getBusNoFromKey(busVarientKey);
+        String regularity = getRegularityOfBus(scheduledStop, stopSchedule);
         //String variant = scheduledStop;
         holder.busNumber.setText(busNo);
         holder.busName.setText(busName);
-
+        holder.variant.setText(regularity);
         String ETA=getETAMins(scheduledArrivalEst);
         holder.schedule.setText(ETA+"");;
     }
@@ -187,6 +182,33 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.MyView
         String busNo = busExploaded[0];
 
         return busNo;
+    }
+
+    public String getBusNoByExplodingVarientKey(String varientkey){ //TODO: Dumb but a good method this
+        String[] varientExploaded=varientkey.split("-");
+        if(varientExploaded.length != 0){
+            return varientExploaded[0];
+        }else
+            return null;
+
+    }
+
+    public String getRegularityOfBus(ScheduledStop scheduledStop,StopSchedule stopSchedule){
+        String busVarientKey=scheduledStop.getVariant().getKey();
+        String busNo = getBusNoFromKey(busVarientKey);
+
+        int count = stopSchedule.getStopSchedule().getRouteSchedules().size();
+        List<RouteSchedule> routeSchedules = stopSchedule.getStopSchedule().getRouteSchedules();
+        for(int i=0; i < count; i++){
+            RouteSchedule routeSchedule = routeSchedules.get(i);
+            Log.e("taga",routeSchedule.getRoute().getNumber()+"-+-"+Long.parseLong(busNo));
+            if(routeSchedule.getRoute().getNumber() == Long.parseLong(busNo)) {
+                String coverage = routeSchedule.getRoute().getCoverage();
+                coverage = coverage.substring(0, 1).toUpperCase()+coverage.substring(1);
+                return coverage;
+            }
+        }
+        return null;
     }
 
 }
