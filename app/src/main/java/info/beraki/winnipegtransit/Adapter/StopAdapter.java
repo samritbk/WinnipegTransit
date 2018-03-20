@@ -3,13 +3,17 @@ package info.beraki.winnipegtransit.Adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Parcelable;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.Serializable;
 
@@ -33,10 +37,7 @@ public class StopAdapter extends RecyclerView.Adapter<StopAdapter.MyViewHolder>{
         this.stopsData=value;
     }
 
-
-
-
-    public class MyViewHolder extends RecyclerView.ViewHolder{
+    public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         TextView stopName;
         TextView stopNumber;
@@ -49,10 +50,15 @@ public class StopAdapter extends RecyclerView.Adapter<StopAdapter.MyViewHolder>{
             stopNumber = itemView.findViewById(R.id.stop_number);
             stopLayoutParent = itemView.findViewById(R.id.RLstopLayoutParent);
 
-
+            itemView.setOnClickListener(this);
 
         }
 
+        @Override
+        public void onClick(View view) {
+            Stop aStop = stopsData.getStops().get(getAdapterPosition());
+            startStopActivity(context, aStop);
+        }
     }
 
 //    //TODO: Is this really the best way
@@ -74,23 +80,14 @@ public class StopAdapter extends RecyclerView.Adapter<StopAdapter.MyViewHolder>{
 
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
+        position = holder.getLayoutPosition();
         final Stop aStop= stopsData.getStops().get(position);
-
-
+        //Toast.makeText(context, position+""+aStop.getName(), Toast.LENGTH_SHORT).show();
         String name=aStop.getName();
         long number=aStop.getNumber();
-
+        //Toast.makeText(context, name, Toast.LENGTH_SHORT).show();
         holder.stopName.setText(name);
         holder.stopNumber.setText("#"+number);
-
-
-        v.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startStopActivity(context, aStop);
-            }
-        });
-
     }
 
     @Override
