@@ -162,10 +162,11 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
 
+            // TODO: There is a NULLException here
             @Override
             public void onSuccess(StopSchedule stopSchedule) {
-                scheduledStopList=getSchedulesByTime(stopSchedule);
-                if(stopSchedule.getRouteSchedules().size() != 0)
+                StopSchedule stopScheduleDep=stopSchedule;
+                scheduledStopList=getSchedulesByTime(stopScheduleDep);
                     scheduleDataAvailable(stopSchedule, scheduledStopList);
             }
 
@@ -175,7 +176,6 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
     }
-
 
     private List<ScheduledStop> getSchedulesByTime(StopSchedule stopSchedule) {
         List<ScheduledStop> scheduledStopList= new ArrayList<>();
@@ -224,7 +224,6 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         @Override
         public int compare(ScheduledStop scheduledStop1, ScheduledStop scheduledStop2) {
-
 
             long scheduledArrivalEst1=getEtaFromTime(scheduledStop1.getTimes().getArrival().getEstimated());
             long scheduledArrivalEst2=getEtaFromTime(scheduledStop2.getTimes().getArrival().getEstimated());
