@@ -3,6 +3,7 @@ package info.beraki.winnipegtransit;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -18,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.maps.CameraUpdate;
@@ -29,6 +31,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -100,6 +106,10 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
         busLatLng = new LatLng(LATITUDE, LONGITUDE);
         //Toast.makeText(context, LATITUDE+"-"+LONGITUDE, Toast.LENGTH_LONG).show();
 
+
+        if(saveStopDetails(stopData.getName(), stopData.getNumber(), "My Work Stop")){
+            Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void init(Context context) {
@@ -151,7 +161,7 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
         DataGathering dataGathering=retrofit.create(DataGathering.class);
 
         Single<StopSchedule> stopScheduleSingle= dataGathering.getScheduledBusesByStop(
-                stopData.getNumber(), //TODO: Is dynamic
+                stopData.getNumber(), //TODO: Is dynamic 10542 - MTS
                 DataGathering.API_KEY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
@@ -218,29 +228,7 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-
-
-    class ScheduledStopComparator implements Comparator<ScheduledStop>{
-
-        @Override
-        public int compare(ScheduledStop scheduledStop1, ScheduledStop scheduledStop2) {
-
-            long scheduledArrivalEst1=getEtaFromTime(scheduledStop1.getTimes().getArrival().getEstimated());
-            long scheduledArrivalEst2=getEtaFromTime(scheduledStop2.getTimes().getArrival().getEstimated());
-
-
-
-            if(scheduledArrivalEst1 > scheduledArrivalEst2){
-                return 1;
-            }else if (scheduledArrivalEst1 < scheduledArrivalEst2){
-                return -1;
-            }
-
-            return 0;
-        }
-    }
-
-    private long getEtaFromTime(String scheduledArrivalEst){
+    static long getEtaFromTime(String scheduledArrivalEst){
 
         //String ETAString=null;
 
@@ -256,7 +244,7 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-    private long getTimeFromString(String scheduledArrivalEst) {
+    private static long getTimeFromString(String scheduledArrivalEst) {
 
         long time = -1;
 
@@ -291,7 +279,41 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     // Stand alone methods
+    private boolean saveStopDetails(String stopName, long stopNumber, String nickName){
 
+        JSONObject stopObject= new JSONObject();
+        JSONArray stopsArray=new JSONArray();
+
+        try {
+            stopObject.put("stop_number", stopNumber);
+            stopObject.put("stop_name", stopName);
+            stopObject.put("stop_nickname", nickName);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        SharedPreferences sharedPreferences= getSharedPreferences("winnipegTransit", MODE_PRIVATE);
+        SharedPreferences.Editor sharedPreferencesEditor= sharedPreferences.edit();
+
+        if(sharedPreferences.getString("savedStops", null) != null){
+            String savedStops=sharedPreferences.getString("savedStops", null);
+            try {
+                stopsArray= new JSONArray(savedStops);
+                int count= stopsArray.length();
+                stopsArray.put(count, stopObject);
+                sharedPreferencesEditor.putString("savedStops", stopsArray.toString());
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return false;
+            }
+            sharedPreferencesEditor.apply();
+        }else{
+            stopsArray.put(stopObject);
+        }
+
+        return true;
+    }
 
 
 }

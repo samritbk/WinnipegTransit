@@ -3,6 +3,7 @@ package info.beraki.winnipegtransit;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -11,7 +12,9 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
@@ -28,6 +31,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
@@ -81,23 +85,31 @@ public class MainActivity extends AppCompatActivity implements
     GoogleMap gMaps;
     SwipeRefreshLayout swipeRefreshLayout;
     Toolbar toolbar;
+    DrawerLayout drawerLayout;
     AppBarLayout appbar;
     TextView enableLocation;
     LocationRequest locationRequest;
     String TAG="winnipeg";
+    int ENABLECLICKED=0;
+    Context context;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        context = MainActivity.this;
         toolbar = findViewById(R.id.toolbar);
         recyclerView = findViewById(R.id.recyclerLayout);
         swipeRefreshLayout = findViewById(R.id.swipeToRefresh);
         appbar = findViewById(R.id.appbar);
         enableLocation = findViewById(R.id.locationEnable);
+        drawerLayout = findViewById(R.id.drawerLayout);
 
         enableLocation.setOnClickListener(this);
 
         setSupportActionBar(toolbar);
+
+        //enableDrawerHamBurger(context, drawerLayout, toolbar, R.string.app_name);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -113,11 +125,34 @@ public class MainActivity extends AppCompatActivity implements
         getLocationData();
 
     }
+    private void enableDrawerHamBurger(Context context, DrawerLayout drawerLayout, Toolbar toolbar, int appname) {
 
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
+        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.app_name, R.string.app_name) {
+
+            public void onDrawerClosed(View view) {
+                supportInvalidateOptionsMenu();
+                //drawerOpened = false;
+            }
+
+            public void onDrawerOpened(View drawerView) {
+                supportInvalidateOptionsMenu();
+                //drawerOpened = true;
+            }
+        };
+
+        actionBarDrawerToggle.setDrawerIndicatorEnabled(true);
+        // Set the drawer toggle as the DrawerListener
+        drawerLayout.addDrawerListener(actionBarDrawerToggle);
+        actionBarDrawerToggle.syncState();
+    }
     @Override
     protected void onResume() {
         super.onResume();
-        //getLocationData();
+        getLocationData();
     }
 
     @Override
@@ -164,6 +199,7 @@ public class MainActivity extends AppCompatActivity implements
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.locationEnable:
+                ENABLECLICKED = 1;
                 getCurrentLocation(mFusedLocationProviderClient);
                 break;
         }
@@ -204,10 +240,10 @@ public class MainActivity extends AppCompatActivity implements
                             requestLocationUpdate(mFusedLocationClient, locationRequest);
                         }else if (!locationSettingsResponse.getLocationSettingsStates().isLocationUsable()){
                             requestLocationUpdate(mFusedLocationClient, locationRequest);
-                            Toast.makeText(MainActivity.this, "onSuccessTaskGPSnotusable", Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(MainActivity.this, "onSuccessTaskGPSnotusable", Toast.LENGTH_SHORT).show();
                         }
                         getLocationData();
-                        Toast.makeText(MainActivity.this, "Outside called", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(MainActivity.this, "Outside called", Toast.LENGTH_SHORT).show();
 
 
                     }
@@ -227,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements
                             } catch (IntentSender.SendIntentException sendEx) {
                                 // Ignore the error.
                             }
-                            Toast.makeText(MainActivity.this, "onSuccessTask22", Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(MainActivity.this, "onSuccessTask22", Toast.LENGTH_SHORT).show();
                         }
 
                     }
@@ -258,12 +294,12 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
+
     @SuppressLint("MissingPermission")
     private void locationDataAvailable() {
 
 
         setUpMapAfterLocationData();
-
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.winnipegtransit.com")
@@ -295,6 +331,8 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onError(Throwable e) {
 
+                Toast.makeText(MainActivity.this, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                swipeRefreshLayout.setRefreshing(false);
             }
         });
 
@@ -328,7 +366,7 @@ public class MainActivity extends AppCompatActivity implements
                     MY_PERMISSIONS_LOCATION);
 
         } else {
-            //Toast.makeText(this, "You can", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "RESULT_OK getting last", Toast.LENGTH_SHORT).show();
             mFusedLocationProviderClient.getLastLocation()
                     .addOnSuccessListener(this, onSuccessListener)
                     .addOnFailureListener(onFailureListener);
@@ -383,13 +421,19 @@ public class MainActivity extends AppCompatActivity implements
                 LONGITUDE = location.getLongitude();
                 LATITUDE = location.getLatitude();
                 locationDataAvailable();
-                Toast.makeText(MainActivity.this, "onSuccessTaskReq", Toast.LENGTH_SHORT).show();
+
                 enableLocation.setVisibility(View.GONE);
                 swipeRefreshLayout.setRefreshing(true);
-                Toast.makeText(MainActivity.this, "still cont", Toast.LENGTH_SHORT).show();
             } else {
-                //TODO: Working on !! Handle LOC data not available
-                showLocationEnable(enableLocation, 0);
+
+                if(ENABLECLICKED==0){
+                    showLocationEnable(enableLocation, 0);
+                }else{
+                    requestLocationUpdate(mFusedLocationProviderClient,locationRequest);
+                    enableLocation.setVisibility(View.GONE);
+                    swipeRefreshLayout.setRefreshing(true);
+                    ENABLECLICKED = 0;
+                }
                 //getCurrentLocation(mFusedLocationProviderClient);
                 //Toast.makeText(MainActivity.this, "Again", Toast.LENGTH_SHORT).show();
             }
@@ -399,7 +443,7 @@ public class MainActivity extends AppCompatActivity implements
     OnFailureListener onFailureListener = new OnFailureListener() {
         @Override
         public void onFailure(@NonNull Exception e) {
-            Toast.makeText(MainActivity.this, e.getMessage()+" its me", Toast.LENGTH_SHORT).show();
+            Crashlytics.logException(e);
         }
     };
 
@@ -407,7 +451,7 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         public void onLocationResult(LocationResult locationResult) {
             Location location = locationResult.getLastLocation();
-            Toast.makeText(MainActivity.this, "datagiven", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, "datagiven", Toast.LENGTH_SHORT).show();
             LONGITUDE = location.getLongitude();
             LATITUDE = location.getLatitude();
 
