@@ -106,10 +106,16 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
         busLatLng = new LatLng(LATITUDE, LONGITUDE);
         //Toast.makeText(context, LATITUDE+"-"+LONGITUDE, Toast.LENGTH_LONG).show();
 
-
+        // TODO: I am here now
         if(saveStopDetails(stopData.getName(), stopData.getNumber(), "My Work Stop")){
             Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
         }
+
+        SharedPreferences sharedPreferences=getSharedPreferences("winnipegTransit", MODE_PRIVATE);
+        String s=sharedPreferences.getString("savedStops", null);
+
+
+        Toast.makeText(context, sharedPreferences.contains("savedStops")+"-", Toast.LENGTH_SHORT).show();
     }
 
     private void init(Context context) {
@@ -296,20 +302,28 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
         SharedPreferences sharedPreferences= getSharedPreferences("winnipegTransit", MODE_PRIVATE);
         SharedPreferences.Editor sharedPreferencesEditor= sharedPreferences.edit();
 
-        if(sharedPreferences.getString("savedStops", null) != null){
-            String savedStops=sharedPreferences.getString("savedStops", null);
+        if(sharedPreferences.getString(getString(R.string.prefSavedStop), null) == null){
+
+            stopsArray.put(stopObject);
+            sharedPreferencesEditor.putString(getString(R.string.prefSavedStop), stopsArray.toString());
+            Toast.makeText(context, "null done", Toast.LENGTH_SHORT).show();
+
+            sharedPreferencesEditor.apply();
+
+        }else if(sharedPreferences.getString(getString(R.string.prefSavedStop), null) != null){
+            Toast.makeText(context, "not null", Toast.LENGTH_SHORT).show();
+            String savedStops=sharedPreferences.getString(getString(R.string.prefSavedStop), null);
+            Toast.makeText(context, savedStops, Toast.LENGTH_LONG).show();
             try {
                 stopsArray= new JSONArray(savedStops);
                 int count= stopsArray.length();
-                stopsArray.put(count, stopObject);
-                sharedPreferencesEditor.putString("savedStops", stopsArray.toString());
+                stopsArray.put(stopObject);
+                sharedPreferencesEditor.putString(getString(R.string.prefSavedStop), stopsArray.toString());
+                sharedPreferencesEditor.apply();
             } catch (JSONException e) {
                 e.printStackTrace();
                 return false;
             }
-            sharedPreferencesEditor.apply();
-        }else{
-            stopsArray.put(stopObject);
         }
 
         return true;

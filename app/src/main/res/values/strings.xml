@@ -3,4 +3,5 @@
     <string name="google_play_API_key">AIzaSyD4IEdGlhJp6mdhWZGyfgHqeTMCytY7_Fw</string>
     <string name="locationNotEnabled">Location is not enabled. Click here to enable</string>
     <string name="locationNotEnabledLastLocation">Data you see if from your last location. Click here to get current location</string>
+    <string name="prefSavedStop">savedStops</string>
 </resources>
