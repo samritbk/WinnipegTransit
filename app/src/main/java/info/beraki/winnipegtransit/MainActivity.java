@@ -6,12 +6,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -24,9 +24,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,7 +32,6 @@ import android.widget.Toast;
 import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -50,13 +47,15 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
-import info.beraki.winnipegtransit.Adapter.ScheduleAdapter;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import info.beraki.winnipegtransit.Adapter.StopAdapter;
 import info.beraki.winnipegtransit.Model.Stops.StopsData;
 import info.beraki.winnipegtransit.View.DataGathering;
@@ -123,6 +122,20 @@ public class MainActivity extends AppCompatActivity implements
                 .setFastestInterval(1000)
                 .setInterval(1500);
         getLocationData();
+
+
+        try {
+            JSONArray jsonArray=getSavedStops(getString(R.string.prefSavedStop));
+            if(jsonArray !=null){
+                for(int i=0; i < jsonArray.length(); i++){
+                    JSONObject jsonObject=jsonArray.getJSONObject(i);
+                    Log.v("tagger",jsonObject.getString("stop_name"));
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
 
     }
     private void enableDrawerHamBurger(Context context, DrawerLayout drawerLayout, Toolbar toolbar, int appname) {
@@ -372,7 +385,20 @@ public class MainActivity extends AppCompatActivity implements
                     .addOnFailureListener(onFailureListener);
         }
     }
+    private JSONArray getSavedStops(String prefName) throws JSONException {
 
+        JSONArray stopsArray= null;
+
+        SharedPreferences sharedPreferences  = getSharedPreferences("winnipegTransit", MODE_PRIVATE);
+        String stopsString= sharedPreferences.getString(prefName, null);
+        if(stopsString != null){
+            stopsArray = new JSONArray(stopsString);
+        }
+
+        return stopsArray;
+
+
+    }
     private void showLocationEnable(TextView enableLocation,int reason){ // 0: lastLocation null 1: lastLocation not null
         switch(reason){
             case 0:

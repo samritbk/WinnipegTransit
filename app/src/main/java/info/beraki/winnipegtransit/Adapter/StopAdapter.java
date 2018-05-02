@@ -83,9 +83,11 @@ public class StopAdapter extends RecyclerView.Adapter<StopAdapter.MyViewHolder>{
         position = holder.getLayoutPosition();
         final Stop aStop= stopsData.getStops().get(position);
         //Toast.makeText(context, position+""+aStop.getName(), Toast.LENGTH_SHORT).show();
+        //TODO: nullpointer calling here
         String name=aStop.getName();
         long number=aStop.getNumber();
         //Toast.makeText(context, name, Toast.LENGTH_SHORT).show();
+
         holder.stopName.setText(name);
         holder.stopNumber.setText("#"+number);
     }

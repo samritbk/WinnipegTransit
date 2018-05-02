@@ -36,6 +36,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.UndeclaredThrowableException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -97,7 +98,8 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
             Stop stop = (Stop) intent.getSerializableExtra("data");
             if(stop != null){
                 stopData = stop;
-                toolbarTitle.setText(stopData.getName());
+                String stopName=stopData.getName();
+                toolbarTitle.setText(shortenStopDirection(stopName));
             }
         }
 
@@ -107,8 +109,12 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
         //Toast.makeText(context, LATITUDE+"-"+LONGITUDE, Toast.LENGTH_LONG).show();
 
         // TODO: I am here now
-        if(saveStopDetails(stopData.getName(), stopData.getNumber(), "My Work Stop")){
-            Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
+        if(!isStopSaved(stopData.getNumber(), getString(R.string.prefSavedStop))){
+            if (saveStopDetails(stopData.getName(), stopData.getNumber(), "My Work Stop")) {
+                Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
+            }
+        }else{
+            Toast.makeText(context, "don't be greedy. Fool", Toast.LENGTH_SHORT).show();
         }
 
         SharedPreferences sharedPreferences=getSharedPreferences("winnipegTransit", MODE_PRIVATE);
@@ -116,6 +122,15 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         Toast.makeText(context, sharedPreferences.contains("savedStops")+"-", Toast.LENGTH_SHORT).show();
+    }
+
+    public String shortenStopDirection(String stopName){
+        stopName = stopName.replace("Northbound", "NB");
+        stopName = stopName.replace("Westbound", "WB");
+        stopName = stopName.replace("Southbound", "SB");
+        stopName = stopName.replace("Eastbound", "EB");
+
+        return stopName;
     }
 
     private void init(Context context) {
@@ -178,12 +193,13 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
 
-            // TODO: There is a NULLException here
             @Override
             public void onSuccess(StopSchedule stopSchedule) {
                 StopSchedule stopScheduleDep=stopSchedule;
-                scheduledStopList=getSchedulesByTime(stopScheduleDep);
+                if(stopSchedule != null) {
+                    scheduledStopList = getSchedulesByTime(stopScheduleDep);
                     scheduleDataAvailable(stopSchedule, scheduledStopList);
+                }
             }
 
             @Override
@@ -283,6 +299,37 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
         gMap.animateCamera(zoom);
     }
 
+
+    private boolean isStopSaved(long stopNumber, String prefName){
+        JSONArray stopsArray= null;
+
+        SharedPreferences sharedPreferences  = getSharedPreferences("winnipegTransit", MODE_PRIVATE);
+        String stopsString= sharedPreferences.getString(prefName, null);
+        if(stopsString != null){
+            try {
+                stopsArray = new JSONArray(stopsString);
+
+
+                int count= stopsArray.length();
+
+                for(int i=0; i < count; i++){
+                    JSONObject stopObject = stopsArray.getJSONObject(i);
+                    long savedStopNumber = stopObject.getLong("stop_number");
+
+                    if(savedStopNumber == stopNumber){
+                        return true;
+                    }
+                }
+
+                return false;
+
+            } catch (JSONException e) {
+                return false;
+            }
+        }else {
+            return false;
+        }
+    }
 
     // Stand alone methods
     private boolean saveStopDetails(String stopName, long stopNumber, String nickName){
