@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements
     String TAG="winnipeg";
     int ENABLECLICKED=0;
     Context context;
+    TextView drawerLayoutText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,7 +104,8 @@ public class MainActivity extends AppCompatActivity implements
         appbar = findViewById(R.id.appbar);
         enableLocation = findViewById(R.id.locationEnable);
         drawerLayout = findViewById(R.id.drawerLayout);
-
+        drawerLayoutText = findViewById(R.id.drawerLayoutText);
+        Crashlytics.log("Hera");
         enableLocation.setOnClickListener(this);
 
         setSupportActionBar(toolbar);
@@ -121,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements
         locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
                 .setFastestInterval(1000)
                 .setInterval(1500);
-        getLocationData();
+        //getLocationData();
 
 
         try {
@@ -129,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements
             if(jsonArray !=null){
                 for(int i=0; i < jsonArray.length(); i++){
                     JSONObject jsonObject=jsonArray.getJSONObject(i);
-                    Log.v("tagger",jsonObject.getString("stop_name"));
+                    drawerLayoutText.append(jsonObject.getString("stop_name")+"\n");
                 }
             }
         } catch (JSONException e) {
@@ -311,7 +313,6 @@ public class MainActivity extends AppCompatActivity implements
     @SuppressLint("MissingPermission")
     private void locationDataAvailable() {
 
-
         setUpMapAfterLocationData();
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -379,24 +380,27 @@ public class MainActivity extends AppCompatActivity implements
                     MY_PERMISSIONS_LOCATION);
 
         } else {
-            Toast.makeText(this, "RESULT_OK getting last", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "LOCATION_ON Trying last location", Toast.LENGTH_SHORT).show();
             mFusedLocationProviderClient.getLastLocation()
                     .addOnSuccessListener(this, onSuccessListener)
                     .addOnFailureListener(onFailureListener);
         }
     }
-    private JSONArray getSavedStops(String prefName) throws JSONException {
+    private JSONArray getSavedStops(String prefName) {
 
         JSONArray stopsArray= null;
 
         SharedPreferences sharedPreferences  = getSharedPreferences("winnipegTransit", MODE_PRIVATE);
         String stopsString= sharedPreferences.getString(prefName, null);
         if(stopsString != null){
-            stopsArray = new JSONArray(stopsString);
+            try {
+                stopsArray = new JSONArray(stopsString);
+            } catch (JSONException e) {
+                Crashlytics.log("JSONExeption-" + prefName);
+            }
         }
 
         return stopsArray;
-
 
     }
     private void showLocationEnable(TextView enableLocation,int reason){ // 0: lastLocation null 1: lastLocation not null
@@ -446,23 +450,28 @@ public class MainActivity extends AppCompatActivity implements
                 // Logic to handle location object
                 LONGITUDE = location.getLongitude();
                 LATITUDE = location.getLatitude();
-                locationDataAvailable();
-
+                Toast.makeText(context, "Last loc ain't null", Toast.LENGTH_SHORT).show();
                 enableLocation.setVisibility(View.GONE);
                 swipeRefreshLayout.setRefreshing(true);
+                locationDataAvailable();
             } else {
 
                 if(ENABLECLICKED==0){
                     showLocationEnable(enableLocation, 0);
+                    Toast.makeText(context, "Line 462 Main", Toast.LENGTH_SHORT).show();
                 }else{
-                    requestLocationUpdate(mFusedLocationProviderClient,locationRequest);
+                    Toast.makeText(context, "Line 464 Main", Toast.LENGTH_SHORT).show();
                     enableLocation.setVisibility(View.GONE);
                     swipeRefreshLayout.setRefreshing(true);
+                    requestLocationUpdate(mFusedLocationProviderClient,locationRequest);
                     ENABLECLICKED = 0;
                 }
                 //getCurrentLocation(mFusedLocationProviderClient);
                 //Toast.makeText(MainActivity.this, "Again", Toast.LENGTH_SHORT).show();
             }
+
+
+            //mFusedLocationProviderClient.removeLocationUpdates();
         }
     };
 
@@ -476,6 +485,7 @@ public class MainActivity extends AppCompatActivity implements
     LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
+            //enableLocation.setVisibility(View.GONE);
             Location location = locationResult.getLastLocation();
             //Toast.makeText(MainActivity.this, "datagiven", Toast.LENGTH_SHORT).show();
             LONGITUDE = location.getLongitude();

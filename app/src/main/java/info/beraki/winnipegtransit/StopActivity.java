@@ -108,14 +108,7 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
         busLatLng = new LatLng(LATITUDE, LONGITUDE);
         //Toast.makeText(context, LATITUDE+"-"+LONGITUDE, Toast.LENGTH_LONG).show();
 
-        // TODO: I am here now
-        if(!isStopSaved(stopData.getNumber(), getString(R.string.prefSavedStop))){
-            if (saveStopDetails(stopData.getName(), stopData.getNumber(), "My Work Stop")) {
-                Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
-            }
-        }else{
-            Toast.makeText(context, "don't be greedy. Fool", Toast.LENGTH_SHORT).show();
-        }
+
 
         SharedPreferences sharedPreferences=getSharedPreferences("winnipegTransit", MODE_PRIVATE);
         String s=sharedPreferences.getString("savedStops", null);
@@ -152,6 +145,14 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         getMenuInflater().inflate(R.menu.stop_menu, menu);
 
+        MenuItem stopMenuItem= menu.findItem(R.id.saveStop);
+
+        if(isStopSaved(stopData.getNumber(), getString(R.string.prefSavedStop))){
+            stopMenuItem.setIcon(R.drawable.ic_bookmark_24dp);
+        }else{
+            stopMenuItem.setIcon(R.drawable.ic_bookmark_border_24dp);
+        }
+
         return true;
     }
 
@@ -164,6 +165,20 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
                     map.setVisibility(View.GONE);
                 else
                     map.setVisibility(View.VISIBLE);
+                break;
+
+            case R.id.saveStop:
+
+                if(!isStopSaved(stopData.getNumber(), getString(R.string.prefSavedStop))){
+                    item.setIcon(R.drawable.ic_bookmark_24dp);
+                    if (saveStopDetails(stopData.getName(), stopData.getNumber(), "My Work Stop")) {
+                        Toast.makeText(context, "Saved to favorites", Toast.LENGTH_SHORT).show();
+                    }
+                }else{
+                    item.setIcon(R.drawable.ic_bookmark_border_24dp);
+                    removeSavedStop(stopData.getNumber(), getString(R.string.prefSavedStop));
+                }
+
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -309,7 +324,6 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
             try {
                 stopsArray = new JSONArray(stopsString);
 
-
                 int count= stopsArray.length();
 
                 for(int i=0; i < count; i++){
@@ -329,6 +343,36 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
         }else {
             return false;
         }
+    }
+
+    private boolean removeSavedStop(long stopNumber, String prefName){
+        JSONArray stopsArray= null;
+
+        SharedPreferences sharedPreferences  = getSharedPreferences("winnipegTransit", MODE_PRIVATE);
+        String stopsString= sharedPreferences.getString(prefName, null);
+        SharedPreferences.Editor sharedPreferencesEditor = sharedPreferences.edit();
+        if(stopsString != null) {
+            try {
+                stopsArray = new JSONArray(stopsString);
+                int count = stopsArray.length();
+                for(int i=0; i < count; i++){
+                    long currentStop = stopsArray.getJSONObject(i).getLong("stop_number");
+                    if(currentStop == stopNumber){
+                        stopsArray.remove(i);
+                        sharedPreferencesEditor.putString(prefName, stopsArray.toString());
+                        sharedPreferencesEditor.apply();
+                        Toast.makeText(context, "Removed from Favorates", Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+            } catch (JSONException e) {
+                Crashlytics.log("JSONException" + stopsString);
+                return false;
+            }
+
+        }
+
+        return false;
     }
 
     // Stand alone methods
@@ -353,14 +397,11 @@ public class StopActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             stopsArray.put(stopObject);
             sharedPreferencesEditor.putString(getString(R.string.prefSavedStop), stopsArray.toString());
-            Toast.makeText(context, "null done", Toast.LENGTH_SHORT).show();
 
             sharedPreferencesEditor.apply();
 
         }else if(sharedPreferences.getString(getString(R.string.prefSavedStop), null) != null){
-            Toast.makeText(context, "not null", Toast.LENGTH_SHORT).show();
             String savedStops=sharedPreferences.getString(getString(R.string.prefSavedStop), null);
-            Toast.makeText(context, savedStops, Toast.LENGTH_LONG).show();
             try {
                 stopsArray= new JSONArray(savedStops);
                 int count= stopsArray.length();

@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "100975151672",
+    "firebase_url": "https://winnipegtransit-83c72.firebaseio.com",
+    "project_id": "winnipegtransit-83c72",
+    "storage_bucket": "winnipegtransit-83c72.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:100975151672:android:80658ac6c36d7aeb",
+        "android_client_info": {
+          "package_name": "info.beraki.winnipegtransit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "100975151672-88h6lat6bnrr6fgd1chi4vr7gjli0ams.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "info.beraki.winnipegtransit",
+            "certificate_hash": "af240bf7626504401a0529859c49edd79bdea325"
+          }
+        },
+        {
+          "client_id": "100975151672-atjeme9tplkukb6djap3crrd2of6bcsi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRREXcDyk3HgU53JWSV_pG53mz-UYoA6M"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "100975151672-atjeme9tplkukb6djap3crrd2of6bcsi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
