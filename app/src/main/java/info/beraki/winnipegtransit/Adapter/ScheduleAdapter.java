@@ -22,6 +22,7 @@ import info.beraki.winnipegtransit.Model.Stops.Stop;
 import info.beraki.winnipegtransit.R;
 import info.beraki.winnipegtransit.StopActivity;
 
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -94,21 +95,25 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.MyView
         holder.busName.setText(busName);
         holder.variant.setText(regularity);
 
-
         String ETA=getETAMins(scheduledArrivalEst, scheduledArrival);
-
 
         holder.schedule.setText(ETA);
 
         long getReliability = getReliability(scheduledArrivalEst,scheduledArrival);
 
         //TODO: This is a lazy man's code
-        try{
-            int etaParsed=Integer.parseInt(ETA);
-            if(etaParsed == 1) {
-                holder.status.setText("Min");
-            }else if(etaParsed < 30) {
-                holder.status.setText("Mins");
+        try {
+            int etaParsed=0;
+            if(!ETA.equals("Due")){
+                etaParsed = Integer.parseInt(ETA);
+                if(etaParsed == 1) {
+                    holder.status.setText("Min");
+                }else if(etaParsed < 30) {
+                    holder.status.setText("Mins");
+                }
+                holder.status.setVisibility(View.VISIBLE);
+            }else{
+                holder.status.setVisibility(View.GONE);
             }
         }catch (NumberFormatException e){
             holder.status.setVisibility(View.GONE);

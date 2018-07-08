@@ -253,11 +253,16 @@ public class MainActivity extends AppCompatActivity implements
                         // location requests here.
                         if (!locationSettingsResponse.getLocationSettingsStates().isGpsUsable()) {
                             requestLocationUpdate(mFusedLocationClient, locationRequest);
+                            enableLocation.setVisibility(View.GONE);
+                            Toast.makeText(context, "Gone", Toast.LENGTH_SHORT).show();
                         }else if (!locationSettingsResponse.getLocationSettingsStates().isLocationUsable()){
                             requestLocationUpdate(mFusedLocationClient, locationRequest);
+                            enableLocation.setVisibility(View.GONE);
+                            Toast.makeText(context, "Gone", Toast.LENGTH_SHORT).show();
                             //Toast.makeText(MainActivity.this, "onSuccessTaskGPSnotusable", Toast.LENGTH_SHORT).show();
                         }
-                        getLocationData();
+                        Toast.makeText(context, "Gone 2", Toast.LENGTH_SHORT).show();
+                        //getLocationData();
                         //Toast.makeText(MainActivity.this, "Outside called", Toast.LENGTH_SHORT).show();
 
 
@@ -278,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements
                             } catch (IntentSender.SendIntentException sendEx) {
                                 // Ignore the error.
                             }
-                            //Toast.makeText(MainActivity.this, "onSuccessTask22", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "unsuccess", Toast.LENGTH_SHORT).show();
                         }
 
                     }
@@ -293,6 +298,7 @@ public class MainActivity extends AppCompatActivity implements
                 switch (resultCode){
                     case Activity.RESULT_OK:
                         Toast.makeText(this, "RESULT_OK", Toast.LENGTH_SHORT).show();
+                        enableLocation.setText("Yes");
                         getLocationData();
                         break;
                 }
@@ -464,7 +470,7 @@ public class MainActivity extends AppCompatActivity implements
                     enableLocation.setVisibility(View.GONE);
                     swipeRefreshLayout.setRefreshing(true);
                     requestLocationUpdate(mFusedLocationProviderClient,locationRequest);
-                    ENABLECLICKED = 0;
+                    ENABLECLICKED = 1;
                 }
                 //getCurrentLocation(mFusedLocationProviderClient);
                 //Toast.makeText(MainActivity.this, "Again", Toast.LENGTH_SHORT).show();

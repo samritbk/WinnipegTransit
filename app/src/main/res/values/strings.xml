@@ -2,6 +2,7 @@
     <string name="app_name">Winnipeg Transit</string>
     <string name="google_play_API_key">AIzaSyAIeKF_e2sAUFm8skXFfj_aMFl7sP-8aNI</string>
     <string name="locationNotEnabled">Location is not enabled. Click here to enable</string>
-    <string name="locationNotEnabledLastLocation">Data you see if from your last location. Click here to get current location</string>
+    <string name="locationNotEnabledLastLocation">Data you see is from your last location. Click here to get current location</string>
     <string name="prefSavedStop">savedStops</string>
+    <string name="regular">Regular</string>
 </resources>
